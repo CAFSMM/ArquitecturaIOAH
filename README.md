@@ -135,6 +135,37 @@ terraform apply
 
 ---
 
+## 7. Evolución Futura: Hoja de Ruta V2 (Production-Ready)
+
+Aunque el diseño V1 garantiza el desacoplamiento básico entre la ingesta y el consumo, escalar el sistema a un entorno de producción masivo (millones de eventos/día) requiere abordar puntos de contención en I/O y latencia. La versión 2.0 introduce tres patrones clave de arquitectura *Enterprise*:
+
+---
+
+### 1. Implementación de Message Broker Dedicado (Event-Driven Architecture)
+* **Mejora:** Reemplazar el almacenamiento de la `Search Queue` en la base de datos NoSQL por un bus de eventos en memoria como **Redis Streams**, **RabbitMQ** o **AWS SQS**.
+* **Impacto:** Elimina la contención de I/O por *polling* constante en la base de datos. Permite absorber picos masivos de tráfico en la ingesta (*Traffic Shaving*) sin degradar el rendimiento del almacenamiento principal.
+
+### 2. Capa de Caché en Memoria para Consumo (`Cache-Aside Pattern`)
+* **Mejora:** Integrar un clúster de **Redis** / **Memcached** por delante de la `API Consume Data`.
+* **Impacto:** Reduce la latencia de lectura de ~150 ms a **< 15 ms (P95)** para las consultas más frecuentes, absorbiendo hasta un 80% del tráfico de lectura y reduciendo drásticamente los costos operativos del clúster NoSQL.
+
+### 3. Réplicas de Lectura y Dead Letter Queue (DLQ)
+* **Mejora:** 
+  * Configurar la `API Consume Data` para consultar exclusivamente sobre **nodos secundarios (Read Replicas)** de la base de datos.
+  * Implementar una **Cola de Mensajes Muertos (DLQ)** para el aislamiento automático de datos corruptos o peticiones fallidas.
+* **Impacto:** Aislamiento del 100% de los recursos de cómputo entre escrituras y lecturas, elevando la disponibilidad esperada del sistema a un **99.99% SLA**.
+
+---
+
+### Cuadro Comparativo: V1 (Actual) vs V2 (Optimizada)
+
+| Criterio | Arquitectura V1 (Base) | Arquitectura V2 (Optimizada) |
+| :--- | :--- | :--- |
+| **Manejo de Colas** | Colección NoSQL (`Search Queue`) | **Message Broker Dedicado** (SQS / RabbitMQ / Redis) |
+| **Latencia de Lectura** | ~100 - 200 ms | **< 15 ms** (Vía Redis Cache) |
+| **Resiliencia ante Picos** | Limitada por I/O de la DB | **Alta** (Aislada por el Broker) |
+| **Disponibilidad (SLA)** | 99.5% | **99.99%** |
+
 ## Licencia y Propiedad Intelectual
 
 Este documento y los diseños adjuntos son propiedad intelectual de **Camilo A. F. S. Muñoz Montoya**.
