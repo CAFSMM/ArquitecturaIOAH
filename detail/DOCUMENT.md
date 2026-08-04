@@ -10,6 +10,7 @@
 ## 1. Resumen Ejecutivo y Visión General
 
 La presente especificación describe una **plataforma distribuida, serverless y altamente modular** diseñada para resolver el ciclo de vida completo de los datos: desde su extracción e ingesta heterogénea masiva, pasando por el almacenamiento desacoplado, hasta su monetización y consumo seguro mediante APIs estandarizadas.
+Este modelo permite el acoplamiento de otros modulos (APIs) al sistema, permitiendo expandir y adpatar la funcionalidad según las necesidades de la empresa.
 
 ### Diferenciadores Clave
 1. **Desacoplamiento Absoluto:** Separación física y lógica entre la ingesta y el consumo de información.
@@ -24,14 +25,19 @@ La presente especificación describe una **plataforma distribuida, serverless y 
 <!-- REFERENCIA DE IMAGEN: Insertar aquí el Diagrama Principal de Arquitectura -->
 > **[REFERENCIA_DIAGRAMA_01: Diagrama General de Arquitectura V2]**  
 > *Descripción para la imagen: Vista general del sistema que muestra la interacción entre las fuentes heterogéneas, el Módulo A-Auth, el Subsistema de Ingesta (A), la Capa de Persistencia NoSQL y Caché (B), el Módulo C-Auth, el Subsistema de Consumo (C) y los Clientes Finales.*
-
 ---
 
-## 3. Módulos de Autenticación & Negocio (Auth & Monetización)
+La arquitectura base es simil a un sistema MVC pero con un desacople total de las funciones, permitiendo la independencia de los componentes. Se mantienen todas las comunicaciones entre los componentes a travez de llamadas que no requieren respuesta. Esto permite mantener, mejorar y escalar cada componente de forma independiente sin afectar el resto del sistema.
+
+## 3. Modulos Adicionales
+
+### 3.1 Módulos de Autenticación & Negocio (Auth & Monetización)
 
 Para mantener la flexibilidad tecnológica, los módulos de seguridad operan de forma independiente y aislada del código core de negocio (*Microservicios / Lambdas desacoplados*).
 
-### 3.1 Módulo C-Auth: Seguridad y Monetización de cara al Cliente
+Los modulos de autentificación de usuario o de subida de información al sistema principal se pueden agregar en caso de ser necesarios y se acoplan a la infraestructura según los estándares de la arquitectura.
+
+#### 3.1.1 Módulo C-Auth: Seguridad y Monetización de cara al Cliente
 
 Este módulo se antepone a la **API de Consumo (C)** y es el encargado de gestionar el acceso de los clientes y el cobro por uso.
 
@@ -84,6 +90,8 @@ El subsistema **(A)** actúa como una capa de abstracción y "traductor universa
 3. **APIs REST / GraphQL de Terceros:** Conectores tipo *Polling* o *Event-driven* para consumir plataformas externas.
 4. **Ingesta Masiva de Archivos (*Batch File Ingestion*):** Procesamiento asíncrono de archivos CSV, Parquet o JSON colocados en buckets de almacenamiento (S3/Blob Storage).
 5. **Webhooks Entrantes:** Endpoints preparados para recibir eventos automáticos en tiempo real.
+
+Estos son algunos ejemplos de posibles ingestas de datos. El sistema puede adaptarse a diferentes necesidades según el tipo de datos que se deseen ingestar.
 
 ### 4.2 Enfoque de Procesamiento Híbrido
 
